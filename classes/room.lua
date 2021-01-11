@@ -39,39 +39,34 @@ function Room:draw()
 	for @._ents['All'] do table.insert(entities, it) end
 	table.sort(entities, fn(a, b) if a.z == b.z then return a.id < b.id else return a.z < b.z end end)
 
+	local _r, _g, _b, _a = lg.getColor()
 	@.camera:draw(function()
-		local _r, _g, _b, _a = love.graphics.getColor()
 		@:draw_inside_camera_bg()
-		love.graphics.setColor(_r, _g, _b, _a)
+		lg.setColor(_r, _g, _b, _a)
 
 		for entities do 
 			if it.draw && !it.outside_camera then 
-				local _r, _g, _b, _a = love.graphics.getColor()
 				it:draw()
-				love.graphics.setColor(_r, _g, _b, _a)
+				lg.setColor(_r, _g, _b, _a)
 			end
 		end
 
-		local _r, _g, _b, _a = love.graphics.getColor()
 		@:draw_inside_camera_fg()
-		love.graphics.setColor(_r, _g, _b, _a)
+		lg.setColor(_r, _g, _b, _a)
 	end)
 
-	local _r, _g, _b, _a = love.graphics.getColor()
 	@:draw_outside_camera_bg()
-	love.graphics.setColor(_r, _g, _b, _a)
+	lg.setColor(_r, _g, _b, _a)
 
 	for entities do 
 		if it.draw && it.outside_camera then
-			local _r, _g, _b, _a = love.graphics.getColor()
 			it:draw()
-			love.graphics.setColor(_r, _g, _b, _a)
+			lg.setColor(_r, _g, _b, _a)
 		end
 	end
 
-	local _r, _g, _b, _a = love.graphics.getColor()
 	@:draw_outside_camera_fg()
-	love.graphics.setColor(_r, _g, _b, _a)
+	lg.setColor(_r, _g, _b, _a)
 end
 
 function Room:add(a, b, c)

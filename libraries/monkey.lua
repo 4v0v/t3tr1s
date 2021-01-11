@@ -8,7 +8,6 @@ local function parse(s)
 	local _wl        = "[%s]-"
 
 	local patterns = {
-		{ patt = "%-%-[^\n]+"         , repl = ""},
 		{ patt = "@"                  , repl = "self"},
 		{ patt = var .. _wl .. "%+="  , repl = "%1 = %1 + "},
 		{ patt = var .. _wl .. "%-="  , repl = "%1 = %1 - "},

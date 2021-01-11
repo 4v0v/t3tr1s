@@ -24,6 +24,7 @@ function love.run()
 		lg.setDefaultFilter('nearest', 'nearest')
 		lg.setLineStyle('rough')
 		lg.setBackgroundColor(.2, .2, .2, .2)
+		lk.setKeyRepeat(true)
 		
 		Class   = require('libraries/class')
 		Camera  = require('libraries/camera')
