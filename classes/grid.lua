@@ -25,13 +25,13 @@ function Grid:clone()
 end
 
 function Grid:get(x, y)
-  if !@:is_outside(x, y) then
+  if !@:is_oob(x, y) then
     return @.grid[@.width*(y-1) + x]
   end
 end
 
 function Grid:set(x, y, value)
-  if !@:is_outside(x, y) then
+  if !@:is_oob(x, y) then
     @.grid[@.width*(y-1) + x] = value
   end
 end
@@ -166,16 +166,11 @@ function Grid:flood_fill(v)
   return islands, marked_grid
 end
 
-
-function Grid:is_outside(x, y)
+function Grid:is_oob(x, y)
   if x > @.width then return true end
   if x < 1 then return true end
   if y > @.height then return true end
   if y < 1 then return true end
-end
-
-function Grid:is_inside(x, y)
-	return !@:is_outside(x, y)
 end
 
 function Grid:__tostring()

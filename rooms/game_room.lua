@@ -75,7 +75,7 @@ function Game_room:new()
 		{type = 8, x = 7, y = 20},
 		{type = 8, x = 6, y = 19},
 	}
-	@:every_immediate(1, fn() @:tick() end, _, 'tick')
+	@:every_immediate(.3, fn() @:tick() end, _, 'tick')
 end
 
 function Game_room:update(dt)
@@ -90,13 +90,13 @@ function Game_room:draw_outside_camera_fg()
 
 	@.grid:foreach(fn(grid, i, j) 
 		lg.setColor(.4, .4, .4)
-		lg.rectangle("line", 25 * i, 25 * j, 25 , 25, 5, 5 )
+		lg.rectangle("line", 25 * i, 25 * j, 25 , 25 )
 	end)
 
 	@.grid:foreach(fn(grid, i, j)
 		local cell = grid:get(i, j)
-		if     cell == 0 then return
-		elseif cell == 1 then lg.setColor(.8,  0,  0)
+		if cell == 0 then return end
+		if     cell == 1 then lg.setColor(.8,  0,  0)
 		elseif cell == 2 then lg.setColor( 0, .8,  0)
 		elseif cell == 3 then lg.setColor( 0,  0, .8)
 		elseif cell == 4 then lg.setColor(.8, .8,  0)
@@ -108,71 +108,73 @@ function Game_room:draw_outside_camera_fg()
 	end)
 end
 
-
-	-- @.grid:foreach(fn(grid, i, j)
-	-- 	local cell = grid:get(i, j)
-
-
-	-- end)
-	--[[
-		regarder si on a perdu
-			oui: game over
-			non: continue
-
-		regarder si il y a une brique active
-			non: faire apparaitre brique active
-			oui: faire descendre brique active
-
-		regarder si ligne est créée
-			non: rien
-			oui: score++, faire disparaitre ligne, faire descendre les autres briques 
-	]]--
 function Game_room:tick()
 	@.grid = @.empty_grid:clone()
 
-	ifor @.active do 
-		it.y += 1
-	end
-	
+	ifor @.ground do @.grid:set(it.x, it.y, 8) end
+
 	ifor @.active do
-		@.grid:set(it.x, it.y, it.type)
+		local temp_x, temp_y = it.x, it.y + 1
+		if @.grid:is_oob(temp_x, temp_y) || @.grid:get(temp_x, temp_y) != 0 then
+			ifor @.active do 
+				table.insert(@.ground, {x = it.x, y = it.y})
+				@.grid:set(it.x, it.y, 8)
+			end
+
+			local color = math.random(7)
+			@.active = {
+				{type = color, x = 1, y = 1},
+				{type = color, x = 2, y = 1},
+				{type = color, x = 2, y = 2},
+				{type = color, x = 3, y = 2},
+			}
+			break
+		end
 	end
 
-	ifor @.ground do
-		@.grid:set(it.x, it.y, it.type)
+	ifor @.active do 
+		it.y += 1
+		@.grid:set(it.x, it.y, it.type) 
 	end
+
 end
 
 function Game_room:move_left()
 	@.grid = @.empty_grid:clone()
 
-	ifor @.active do 
-		it.x -= 1
-	end
+	ifor @.ground do @.grid:set(it.x, it.y, 8) end
 
 	ifor @.active do
-		@.grid:set(it.x, it.y, it.type)
+		local temp_x, temp_y = it.x - 1, it.y
+		if @.grid:is_oob(temp_x, temp_y) || @.grid:get(temp_x, temp_y) != 0 then 
+			goto is_not_moving
+		end
 	end
 
-	ifor @.ground do
-		@.grid:set(it.x, it.y, it.type)
-	end
+	ifor @.active do it.x -= 1 end
+
+	::is_not_moving::
+
+	ifor @.active do	@.grid:set(it.x, it.y, it.type) end
 end
 
 function Game_room:move_right()
 	@.grid = @.empty_grid:clone()
 
-	ifor @.active do 
-		it.x += 1
-	end
+	ifor @.ground do @.grid:set(it.x, it.y, 8) end
 
 	ifor @.active do
-		@.grid:set(it.x, it.y, it.type)
+		local temp_x, temp_y = it.x + 1, it.y
+		if @.grid:is_oob(temp_x, temp_y) || @.grid:get(temp_x, temp_y) != 0 then 
+			goto is_not_moving
+		end
 	end
 
-	ifor @.ground do 
-		@.grid:set(it.x, it.y, it.type)
-	end
+	ifor @.active do it.x += 1 end
+
+	::is_not_moving::
+
+	ifor @.active do @.grid:set(it.x, it.y, it.type) end
 end
 
 function Game_room:rotate_clockwise()
