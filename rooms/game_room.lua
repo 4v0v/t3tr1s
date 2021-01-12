@@ -62,6 +62,12 @@ function Game_room:new()
 		0, 0, 0, 0
 	})
 
+	@.next = {
+		{type = 3, x = 1, y = 1},
+		{type = 3, x = 2, y = 1},
+		{type = 3, x = 2, y = 2},
+		{type = 3, x = 3, y = 2},
+	}
 
 	@.active = {
 		{type = 2, x = 1, y = 1},
@@ -95,8 +101,8 @@ function Game_room:draw_outside_camera_fg()
 
 	@.grid:foreach(fn(grid, i, j)
 		local cell = grid:get(i, j)
-		if cell == 0 then return end
-		if     cell == 1 then lg.setColor(.8,  0,  0)
+		if     cell == 0 then return
+		elseif cell == 1 then lg.setColor(.8,  0,  0)
 		elseif cell == 2 then lg.setColor( 0, .8,  0)
 		elseif cell == 3 then lg.setColor( 0,  0, .8)
 		elseif cell == 4 then lg.setColor(.8, .8,  0)
@@ -106,6 +112,22 @@ function Game_room:draw_outside_camera_fg()
 		elseif cell == 8 then lg.setColor(.5, .5, .5) end
 		lg.rectangle("fill", 25 * i, 25 * j, 25 , 25, 5, 5 )
 	end)
+
+	lg.setColor(.5, .5, .5)
+	lg.rectangle("line", 300, 25, 100, 100)
+
+	ifor @.next do 
+		if     it.type == 1 then lg.setColor(.8,  0,  0)
+		elseif it.type == 2 then lg.setColor( 0, .8,  0)
+		elseif it.type == 3 then lg.setColor( 0,  0, .8)
+		elseif it.type == 4 then lg.setColor(.8, .8,  0)
+		elseif it.type == 5 then lg.setColor(.8,  0, .8)
+		elseif it.type == 6 then lg.setColor( 0, .8, .8)
+		elseif it.type == 7 then lg.setColor(.8, .8, .8)
+		elseif it.type == 8 then lg.setColor(.5, .5, .5) end
+		lg.rectangle("fill", 287.5 + 25 * it.x , 25 + 25 * it.y, 25 , 25, 5, 5 )
+	end
+
 end
 
 function Game_room:tick()
@@ -120,14 +142,7 @@ function Game_room:tick()
 				table.insert(@.ground, {x = it.x, y = it.y})
 				@.grid:set(it.x, it.y, 8)
 			end
-
-			local color = math.random(7)
-			@.active = {
-				{type = color, x = 1, y = 1},
-				{type = color, x = 2, y = 1},
-				{type = color, x = 2, y = 2},
-				{type = color, x = 3, y = 2},
-			}
+			@.active = {}
 			break
 		end
 	end
@@ -137,6 +152,19 @@ function Game_room:tick()
 		@.grid:set(it.x, it.y, it.type) 
 	end
 
+	if #@.active == 0 then
+		ifor @.next do 
+			table.insert(@.active, it)
+		end
+		local color = math.random(7)
+		@.next = {
+			{type = color, x = 1, y = 1},
+			{type = color, x = 2, y = 1},
+			{type = color, x = 2, y = 2},
+			{type = color, x = 3, y = 2},
+		}
+		ifor @.active do @.grid:set(it.x, it.y, it.type) end
+	end
 end
 
 function Game_room:move_left()
