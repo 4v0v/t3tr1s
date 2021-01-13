@@ -4,11 +4,10 @@ function uid()
 	end)
 end
 
-function CMYK(c, m, y, k, a)
+function cmyk(c, m, y, k, a)
 	local r = 1 -  (c * (1 - k) + k)
 	local g = 1 -  (m * (1 - k) + k)
 	local b = 1 -  (y * (1 - k) + k)
-
 	return r, g, b, a
 end
 
@@ -87,26 +86,39 @@ function require_all(path, opts)
 	end
 end
 
-function table.size(t)
+function size(t)
 	local s = 0 
 	for _ in pairs(t) do s = s + 1 end 
 	return s 
 end
 
-function table.keys(t) 
-	local _keys = {} 
-	for k, _ in pairs(t) do _keys[#_keys + 1] = k end 
-	return _keys 
+function uniq(t)
+	local filtered = {}
+	local temp = {}
+	for _, v in ipairs(t) do 
+		temp[v] = true
+	end
+	for k, _ in pairs(temp) do 
+		table.insert(filtered, k)
+	end
+  return filtered
 end
 
-function table.values(t)
+function random_value(t) 
 	local _values = {} 
-	for _, v in pairs(t) do _values[#_values + 1] = v end 
-	return _values 
+	for _, v in pairs(t) do _values[#_values + 1] = v end
+	return _values[math.random(#_values)]
 end
 
-function table.print(t)
-	if type(t) ~= 'table' then print(t) return end
+function random_key(t) 
+	local keys = {} 
+	for k, _ in pairs(t) do keys[#keys + 1] = k end
+	return keys[math.random(#keys)]
+end
+
+local old_print = print
+function print(t)
+	if type(t) ~= 'table' then old_print(t) return end
 
 	local tables, functions, others = {}, {}, {}
 	for k, v in pairs(t) do 
@@ -120,25 +132,25 @@ function table.print(t)
 		end
 	end
 
-	table.sort(tables,    function(a, b) return a.key < b.key end)
-	table.sort(functions, function(a, b) return a.key < b.key end)
-	table.sort(others,    function(a, b) return a.key < b.key end)
+	table.sort(tables,    function(a, b) return tostring(a.key) < tostring(b.key) end)
+	table.sort(functions, function(a, b) return tostring(a.key) < tostring(b.key) end)
+	table.sort(others,    function(a, b) return tostring(a.key) < tostring(b.key) end)
 
-	for k,v in pairs(tables)    do if v.size == 0 then print(v.key .. ' : {}') else print(v.key .. ' : {...}') end end
+	for k,v in pairs(tables)    do if v.size == 0 then print('[' .. v.key .. '] : {}') else print('[' .. v.key .. '] : {...}') end end
 	for k,v in pairs(functions) do print(v.key .. '()') end
-	for k,v in pairs(others)    do print(v.key .. ' : ' .. tostring(v.value)) end
+	for k,v in pairs(others)    do print('[' .. v.key .. '] : ' .. tostring(v.value)) end
 end
 
-function random_value(t) 
+function table.keys(t) 
+	local _keys = {} 
+	for k, _ in pairs(t) do _keys[#_keys + 1] = k end 
+	return _keys 
+end
+
+function table.values(t)
 	local _values = {} 
-	for _, v in pairs(t) do _values[#_values + 1] = v end
-	return _values[math.random(#_values)]
-end
-
-function random_key(t) 
-	local keys = {} 
-	for k, _ in pairs(t) do keys[#keys + 1] = k end
-	return keys[math.random(#keys)]
+	for _, v in pairs(t) do _values[#_values + 1] = v end 
+	return _values 
 end
 
 function circ_circ_collision(...)
