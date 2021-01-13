@@ -54,9 +54,9 @@ function AnimationLogic:update(dt)
       if @.mode == 'once' then
         @.frame = @.frames
 				@.pause = true
-      elseif @.mode == 'loop' then
+      elif @.mode == 'loop' then
 				@.frame = 1
-      elseif @.mode == 'bounce' then
+      elif @.mode == 'bounce' then
         @.direction = -@.direction
         @.frame += 2 * @.direction
 			end

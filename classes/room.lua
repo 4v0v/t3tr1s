@@ -36,7 +36,7 @@ end
 
 function Room:draw()
 	local entities = {}
-	for @._ents['All'] do table.insert(entities, it) end
+	for @._ents['All'] do insert(entities, it) end
 	table.sort(entities, fn(a, b) if a.z == b.z then return a.id < b.id else return a.z < b.z end end)
 
 	local _r, _g, _b, _a = lg.getColor()
@@ -72,20 +72,20 @@ end
 function Room:add(a, b, c)
 	local id, types, entity
 
-	if type(a) == 'string' and type(b) == 'table' and type(c) == 'nil' then
+	if   type(a) == 'string' and type(b) == 'table' and type(c) == 'nil' then
 		id, types, entity = a, {}, b
-	elseif type(a) == 'string' and type(b) == 'table' and type(c) == 'table' then
+	elif type(a) == 'string' and type(b) == 'table' and type(c) == 'table' then
 		id, types, entity = a, b, c
-	elseif type(a) == 'string' and type(b) == 'string' and type(c) == 'table' then 
+	elif type(a) == 'string' and type(b) == 'string' and type(c) == 'table' then 
 		id, types, entity = a, {b}, c
-	elseif type(a) == 'table' and type(b) == 'table' and type(c) == 'nil' then
+	elif type(a) == 'table' and type(b) == 'table' and type(c) == 'nil' then
 		id, types, entity = uid(), a, b
-	elseif type(a) == 'table' and type(b) == 'nil' and type(c) == 'nil' then
+	elif type(a) == 'table' and type(b) == 'nil' and type(c) == 'nil' then
 		id, types, entity = uid(), {}, a
 	end
 
-	table.insert(types, entity:class())
-	for entity.types do table.insert(types, it) end
+	insert(types, entity:class())
+	for entity.types do insert(types, it) end
 
 	entity.types = types  
 	entity.id    = id
@@ -118,7 +118,7 @@ function Room:get_by_type(...)
 		end
 	end
 
-	for filtered do table.insert(entities, it) end
+	for filtered do insert(entities, it) end
 
 	return entities
 end
@@ -136,7 +136,7 @@ function Room:count(...)
 		end
 	end
 
-	for filtered do table.insert(entities, it) end
+	for filtered do insert(entities, it) end
 
 	return #entities
 end

@@ -17,6 +17,7 @@ local function parse(s)
 		{ patt = var .. _wl .. "%%="  , repl = "%1 = %1 %% "},
 		{ patt = var .. _wl .. "%.%.=", repl = "%1 = %1 .. "},
 		{ patt = var .. _wl .. "%+%+" , repl = "%1 = %1 + 1"},
+		{ patt = wl .."elif" .. wl    , repl = " elseif "},
 		{ patt = "&&"                 , repl = " and "},
 		{ patt = "||"                 , repl = " or "},
 		{ patt = "!="                 , repl = " ~= "},

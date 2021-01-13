@@ -4,6 +4,14 @@ function uid()
 	end)
 end
 
+function CMYK(c, m, y, k, a)
+	local r = 1 -  (c * (1 - k) + k)
+	local g = 1 -  (m * (1 - k) + k)
+	local b = 1 -  (y * (1 - k) + k)
+
+	return r, g, b, a
+end
+
 function get(object, path, default)
 	local value = object
 
@@ -44,6 +52,10 @@ function foreach(iterable, func)
 	elseif type(iterable) == 'table' and iterable[1] then
 		for k, v in ipairs(iterable) do func(v, k) end
 	end
+end
+
+function insert(...)
+	return table.insert(...)
 end
 
 function lerp(a, b, x) 
@@ -116,7 +128,6 @@ function table.print(t)
 	for k,v in pairs(functions) do print(v.key .. '()') end
 	for k,v in pairs(others)    do print(v.key .. ' : ' .. tostring(v.value)) end
 end
-
 
 function random_value(t) 
 	local _values = {} 
