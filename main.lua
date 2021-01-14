@@ -1,8 +1,3 @@
---[[
-	TODO
-	- remove line in the same tick as fall
-]]
-
 function love.run()
 	lg, la, lm, lk        = love.graphics, love.audio, love.mouse, love.keyboard
 	local _INPUT          = {_CUR = {}, _PRE = {}}

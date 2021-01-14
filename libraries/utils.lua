@@ -118,7 +118,14 @@ end
 
 local old_print = print
 function print(t)
-	if type(t) ~= 'table' then old_print(t) return end
+
+	-- check if table has __tostring metamethod
+	if type(t) == 'table' then 
+		local meta = getmetatable(t)
+		if meta.__tostring then old_print(t) return end
+	else 
+		old_print(t) return
+	end
 
 	local tables, functions, others = {}, {}, {}
 	for k, v in pairs(t) do 

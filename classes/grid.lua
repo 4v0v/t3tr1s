@@ -44,6 +44,14 @@ function Grid:foreach(func)
   end
 end
 
+function Grid:fill(value)
+  for i = 1, @.width do
+    for j = 1, @.height do
+      @:set(i, j, value)
+    end
+  end
+end
+
 function Grid:to_table() 
   local t = {}
   for j = 1, @.height do
@@ -62,11 +70,11 @@ function Grid:rotate_anticlockwise()
     end
   end
 
-  for i = 1, new_grid.w do
-    for k = 0, math.floor(new_grid.h/2) do
-      local v1, v2 = new_grid:get(i, 1+k), new_grid:get(i, new_grid.h-k)
+  for i = 1, new_grid.width do
+    for k = 0, math.floor(new_grid.height/2) do
+      local v1, v2 = new_grid:get(i, 1+k), new_grid:get(i, new_grid.height-k)
       new_grid:set(i, 1+k, v2)
-      new_grid:set(i, new_grid.h-k, v1)
+      new_grid:set(i, new_grid.height-k, v1)
     end
   end
 
@@ -81,11 +89,11 @@ function Grid:rotate_clockwise()
     end
   end
 
-  for j = 1, new_grid.h do
-    for k = 0, math.floor(new_grid.w/2) do
-      local v1, v2 = new_grid:get(1+k, j), new_grid:get(new_grid.w-k, j)
+  for j = 1, new_grid.height do
+    for k = 0, math.floor(new_grid.width/2) do
+      local v1, v2 = new_grid:get(1+k, j), new_grid:get(new_grid.width-k, j)
       new_grid:set(1+k, j, v2)
-      new_grid:set(new_grid.w-k, j, v1)
+      new_grid:set(new_grid.width-k, j, v1)
     end
   end
 
@@ -93,13 +101,14 @@ function Grid:rotate_clockwise()
 end
 
 function Grid:is_oob(x, y)
-  if x > @.width then return true end
-  if x < 1 then return true end
+  if x > @.width  then return true end
+  if x < 1        then return true end
   if y > @.height then return true end
-  if y < 1 then return true end
+	if y < 1        then return true end
+	return false
 end
 
-function Grid:to_string()
+function Grid:tostring()
   local str = ''
   for j = 1, @.height do
 		str ..= '['

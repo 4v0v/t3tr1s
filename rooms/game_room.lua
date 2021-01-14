@@ -2,21 +2,21 @@ Game_room = Room:extend('Game_room')
 
 function Game_room:new()
 	Game_room.super.new(@)
-	
 
-	@:add('score', Text(400, 500, '0', {
+	@.score          = 0
+	@:add('score', Text(400, 500, @.score, {
 		font           = lg.newFont('assets/fonts/fixedsystem.ttf', 32),
 		scale          = 3, 
 		centered       = true,
 	}))
 
-	@.empty_grid    = Grid(10, 20)
 	@.grid          = Grid(10, 20)
 	@.current_idx   = 0
 	@.next_idx      = 0
 	@.next_piece    = {}
 	@.current_blocs = {}
 	@.placed_blocs  = {}
+	@.top_left      = {x = 4, y = 1}
 
 	@.pieces = {
 		Grid(3, 3, {
@@ -73,6 +73,7 @@ function Game_room:update(dt)
 
 	if pressed('left')  || pressed('q') then @:move_left()  end
 	if pressed('right') || pressed('d') then @:move_right() end
+	if pressed('space') then @:rotate_clockwise() end
 	if down('down')     || down('s')    then @:move_down()  end
 end
 
@@ -118,74 +119,89 @@ function Game_room:draw_inside_camera_fg()
 end
 
 function Game_room:move_down()
-	@.grid = @.empty_grid:clone()
+	@.grid:fill(0)
 
 	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 
+	local is_touching = false
 	ifor @.current_blocs do
 		local temp_x, temp_y = it.x, it.y + 1
 		if @.grid:is_oob(temp_x, temp_y) || @.grid:get(temp_x, temp_y) != 0 then
-			-- convert current to placed blocks
-			ifor @.current_blocs do 
-				insert(@.placed_blocs, {x = it.x, y = it.y})
-				@.grid:set(it.x, it.y, 8)
-			end
-			
-			-- check if some lines are full
-			local lines_to_remove = {}
-			ifor @.current_blocs do -- limit check to current blocks positions
-				if
-					@.grid:get(1,  it.y) == 8 &&
-					@.grid:get(2,  it.y) == 8 &&
-					@.grid:get(3,  it.y) == 8 &&
-					@.grid:get(4,  it.y) == 8 &&
-					@.grid:get(5,  it.y) == 8 &&
-					@.grid:get(6,  it.y) == 8 &&
-					@.grid:get(7,  it.y) == 8 &&
-					@.grid:get(8,  it.y) == 8 &&
-					@.grid:get(9,  it.y) == 8 &&
-					@.grid:get(10, it.y) == 8 
-				then
-					insert(lines_to_remove, it.y)
-				end
-			end
-			lines_to_remove = uniq(lines_to_remove)
-
-			if #lines_to_remove > 0 then 
-				-- remove lines
-				rfor bloc_pos, bloc in @.placed_blocs do
-					ifor line in lines_to_remove do 
-						if bloc.y == line then
-							table.remove(@.placed_blocs, bloc_pos)
-							break
-						end
-					end
-				end
-
-				-- move blocs down
-				ifor bloc in @.placed_blocs do
-					local dy = 0
-					ifor line in lines_to_remove do
-						if bloc.y < line then	dy += 1 end
-					end
-					 bloc.y += dy
-				end
-
-				@.camera:shake(15 * #lines_to_remove)
-			end
-
-			@.current_blocs = {}
+			is_touching = true
 			break
 		end
 	end
 
-	ifor @.current_blocs do 
-		it.y += 1
-		@.grid:set(it.x, it.y, it.v) 
+	if !is_touching then
+		-- move down
+		ifor @.current_blocs do 
+			it.y += 1
+			@.grid:set(it.x, it.y, it.v) 
+		end
+		@.top_left.y += 1
+	else
+		-- convert current to placed blocks
+		ifor @.current_blocs do 
+			insert(@.placed_blocs, {x = it.x, y = it.y})
+			@.grid:set(it.x, it.y, 8)
+		end
+		
+		-- check if some lines are full
+		local lines_to_remove = {}
+		ifor @.current_blocs do -- limit check to current blocks positions
+			if
+				@.grid:get(1,  it.y) == 8 &&
+				@.grid:get(2,  it.y) == 8 &&
+				@.grid:get(3,  it.y) == 8 &&
+				@.grid:get(4,  it.y) == 8 &&
+				@.grid:get(5,  it.y) == 8 &&
+				@.grid:get(6,  it.y) == 8 &&
+				@.grid:get(7,  it.y) == 8 &&
+				@.grid:get(8,  it.y) == 8 &&
+				@.grid:get(9,  it.y) == 8 &&
+				@.grid:get(10, it.y) == 8 
+			then
+				insert(lines_to_remove, it.y)
+			end
+		end
+		lines_to_remove = uniq(lines_to_remove)
+
+		if #lines_to_remove > 0 then 
+			-- remove lines
+			rfor bloc_pos, bloc in @.placed_blocs do
+				ifor line in lines_to_remove do 
+					if bloc.y == line then
+						table.remove(@.placed_blocs, bloc_pos)
+						break
+					end
+				end
+			end
+
+			-- move blocs down
+			ifor bloc in @.placed_blocs do
+				local dy = 0
+				ifor line in lines_to_remove do
+					if bloc.y < line then	dy += 1 end
+				end
+					bloc.y += dy
+			end
+			
+			@.score += #lines_to_remove
+			local score = @:get('score')
+			score:set_text(@.score)
+
+			@.camera:shake(15 * #lines_to_remove)
+		end
+
+		@.current_blocs = {}
+		@.grid:fill(0)
+		
+		ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 	end
 
+
+	-- generate new current && next piece
 	if #@.current_blocs == 0 then
-		-- generate new current && next piece
 		@.current_idx = @.next_idx
 		ifor @.next_piece do
 			if it.v != 0 then 
@@ -203,11 +219,13 @@ function Game_room:move_down()
 		end
 	
 		ifor @.current_blocs do @.grid:set(it.x, it.y, @.current_idx) end
+		@.top_left.x = 4
+		@.top_left.y = 1
 	end
 end
 
 function Game_room:move_left()
-	@.grid = @.empty_grid:clone()
+	@.grid:fill(0)
 
 	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 
@@ -215,7 +233,7 @@ function Game_room:move_left()
 		local temp_x, temp_y = it.x - 1, it.y
 		if @.grid:is_oob(temp_x, temp_y) || @.grid:get(temp_x, temp_y) != 0 then 
 			ifor @.current_blocs do @.grid:set(it.x, it.y, it.v) end
-			return
+			return -- don't move
 		end
 	end
 	
@@ -223,10 +241,12 @@ function Game_room:move_left()
 		it.x -= 1
 		@.grid:set(it.x, it.y, it.v)
 	end
+
+	@.top_left.x -= 1
 end
 
 function Game_room:move_right()
-	@.grid = @.empty_grid:clone()
+	@.grid:fill(0)
 
 	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 
@@ -234,7 +254,7 @@ function Game_room:move_right()
 		local dx, dy = it.x + 1, it.y
 		if @.grid:is_oob(dx, dy) || @.grid:get(dx, dy) != 0 then 
 			ifor @.current_blocs do @.grid:set(it.x, it.y, it.v) end
-			return
+			return -- don't move
 		end
 	end
 
@@ -242,10 +262,50 @@ function Game_room:move_right()
 		it.x += 1 
 		@.grid:set(it.x, it.y, it.v) 
 	end
+
+	@.top_left.x += 1
 end
 
 function Game_room:rotate_clockwise()
-end
+	local can_rotate    = true
+	local current_piece = @.pieces[@.current_idx]
 
-function Game_room:rotate_anticlockwise()
+	local blocs = (fn()
+		local t = {}
+		foreach(current_piece.width, fn(j) 
+			foreach(current_piece.height, fn(i) 
+				insert(t, @.grid:get(@.top_left.x + i -1, @.top_left.y + j -1))
+			end)
+		end)
+		return t
+	end)()
+	
+	local piece   = Grid(current_piece.width, current_piece.height, blocs)
+	local rotated = piece:rotate_clockwise()
+
+	@.grid:fill(0)
+
+	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
+
+	rotated:foreach(fn(grid, i, j)
+		local dx   = i + @.top_left.x -1
+		local dy   = j + @.top_left.y -1
+		local cell = @.grid:get(dx, dy)
+
+		if @.grid:is_oob(dx, dy) || cell != 0 then 
+			can_rotate = false
+		end
+	end)
+
+	if can_rotate then
+		@.current_blocs = {}
+		rotated:foreach(fn(grid, i, j)
+			local value = grid:get(i, j)
+			if value != 0 then
+				insert(@.current_blocs, { x = @.top_left.x + i -1, y = @.top_left.y + j - 1, v = @.current_idx})
+			end
+		end)
+	end
+
+	ifor @.current_blocs do @.grid:set(it.x, it.y, it.v) end
 end
