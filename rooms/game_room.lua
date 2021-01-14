@@ -2,10 +2,10 @@ Game_room = Room:extend('Game_room')
 
 function Game_room:new()
 	Game_room.super.new(@)
+	
 
 	@:add('score', Text(400, 500, '0', {
 		font           = lg.newFont('assets/fonts/fixedsystem.ttf', 32),
-		outside_camera = true,
 		scale          = 3, 
 		centered       = true,
 	}))
@@ -55,29 +55,28 @@ function Game_room:new()
 			1, 1,
 		}),
 	}
+
+	@.camera:set_position(400, 300)
+
+	@.next_idx = math.random(#@.pieces)
+	local piece = @.pieces[@.next_idx]:to_table()
+	ifor bloc in piece do 
+		if bloc[3] != 0 then
+			insert(@.next_piece, {x = bloc[1], y = bloc[2], v = bloc[3]})
+		end
+	end
+	@:every_immediate(.3, fn() @:move_down() end, _, 'move_down')
 end
 
 function Game_room:update(dt)
 	Game_room.super.update(@, dt)
-
-	@:once(fn() 
-		@.next_idx = math.random(#@.pieces)
-		local piece = @.pieces[@.next_idx]:to_table()
-		ifor bloc in piece do 
-			if bloc[3] != 0 then
-				insert(@.next_piece, {x = bloc[1], y = bloc[2], v = bloc[3]})
-			end
-		end
-
-		@:every_immediate(.3, fn() @:move_down() end, _, 'move_down')
-	end, 'update_grid')
 
 	if pressed('left')  || pressed('q') then @:move_left()  end
 	if pressed('right') || pressed('d') then @:move_right() end
 	if down('down')     || down('s')    then @:move_down()  end
 end
 
-function Game_room:draw_outside_camera_fg()
+function Game_room:draw_inside_camera_fg()
 	Game_room.super.draw_outside_camera_fg(@)
 
 	-- grid
@@ -165,12 +164,14 @@ function Game_room:move_down()
 
 				-- move blocs down
 				ifor bloc in @.placed_blocs do
-					local y = 0
+					local dy = 0
 					ifor line in lines_to_remove do
-						if bloc.y < line then	y += 1 end
+						if bloc.y < line then	dy += 1 end
 					end
-					 bloc.y += y
+					 bloc.y += dy
 				end
+
+				@.camera:shake(15 * #lines_to_remove)
 			end
 
 			@.current_blocs = {}
