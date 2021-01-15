@@ -18,6 +18,7 @@ function Game_room:new()
 	@.placed_blocs  = {}
 	@.top_left      = {x = 4, y = 1}
 	@.move_down_speed = 1
+	@.can_move_down = true 
 
 	@.move_sound      = la.newSource("assets/sounds/move.wav",   "static")
 	@.rotate_sound    = la.newSource("assets/sounds/rotate.wav", "static")
@@ -81,7 +82,7 @@ function Game_room:update(dt)
 	if pressed('left')  || pressed('q') then @:move_left()  end
 	if pressed('right') || pressed('d') then @:move_right() end
 	if pressed('up')    || pressed('z') then @:rotate_clockwise() end
-	if down('down')     || down('s')    then @:move_down()  end
+	if (down('down')     || down('s')) && @.can_move_down then @:move_down() end
 end
 
 function Game_room:draw_inside_camera_fg()
@@ -125,8 +126,6 @@ end
 
 function Game_room:move_down()
 	@.grid:fill(0)
-
-	print(@:count('Text'))
 
 	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 
@@ -228,6 +227,9 @@ function Game_room:move_down()
 			@.camera:shake(15 * #lines_to_remove)
 			@.placing_sound:play()
 		end
+
+		@.can_move_down = false
+		@:after(.1, fn() @.can_move_down = true end)
 	end
 
 	-- generate new current && next piece
