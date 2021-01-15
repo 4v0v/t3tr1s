@@ -17,6 +17,11 @@ function Game_room:new()
 	@.current_blocs = {}
 	@.placed_blocs  = {}
 	@.top_left      = {x = 4, y = 1}
+	@.move_down_speed = 1
+
+	@.move_sound      = la.newSource("assets/sounds/move.wav",   "static")
+	@.rotate_sound    = la.newSource("assets/sounds/rotate.wav", "static")
+	@.placing_sound   = la.newSource("assets/sounds/drop.wav",   "static")
 
 	@.pieces = {
 		Grid(3, 3, {
@@ -65,7 +70,7 @@ function Game_room:new()
 			insert(@.next_piece, {x = bloc[1], y = bloc[2], v = bloc[3]})
 		end
 	end
-	@:every_immediate(.3, fn() @:move_down() end, _, 'move_down')
+	@:every_immediate(@.move_down_speed, fn() @:move_down() end, _, 'move_down')
 end
 
 function Game_room:update(dt)
@@ -73,13 +78,11 @@ function Game_room:update(dt)
 
 	if pressed('left')  || pressed('q') then @:move_left()  end
 	if pressed('right') || pressed('d') then @:move_right() end
-	if pressed('space') then @:rotate_clockwise() end
+	if pressed('space')                 then @:rotate_clockwise() end
 	if down('down')     || down('s')    then @:move_down()  end
 end
 
 function Game_room:draw_inside_camera_fg()
-	Game_room.super.draw_outside_camera_fg(@)
-
 	-- grid
 	@.grid:foreach(fn(grid, i, j) 
 		lg.setColor(.4, .4, .4)
@@ -166,7 +169,7 @@ function Game_room:move_down()
 		end
 		lines_to_remove = uniq(lines_to_remove)
 
-		if #lines_to_remove > 0 then 
+		if #lines_to_remove > 0 then
 			-- remove lines
 			rfor bloc_pos, bloc in @.placed_blocs do
 				ifor line in lines_to_remove do 
@@ -186,19 +189,42 @@ function Game_room:move_down()
 					bloc.y += dy
 			end
 			
+			-- update score && change level
 			@.score += #lines_to_remove
 			local score = @:get('score')
 			score:set_text(@.score)
 
-			@.camera:shake(15 * #lines_to_remove)
+			if   @.score >= 10 && @.score < 20 then @.move_down_speed = .9
+			elif @.score >= 20 && @.score < 30 then @.move_down_speed = .8
+			elif @.score >= 30 && @.score < 40 then @.move_down_speed = .7
+			elif @.score >= 40 && @.score < 50 then @.move_down_speed = .6
+			elif @.score >= 50 && @.score < 60 then @.move_down_speed = .5
+			elif @.score >= 60 && @.score < 70 then @.move_down_speed = .4
+			elif @.score >= 70 && @.score < 80 then @.move_down_speed = .3
+			elif @.score >= 80 && @.score < 90 then @.move_down_speed = .2
+			elif @.score >= 90                 then @.move_down_speed = .1 end
+
+			@.timer:remove('move_down')
+			@:every_immediate(@.move_down_speed, fn() @:move_down() end, _, 'move_down')
 		end
 
 		@.current_blocs = {}
 		@.grid:fill(0)
 		
 		ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
-	end
 
+		-- fx
+		@.placing_sound:stop()
+		if #lines_to_remove == 0 then
+			@.placing_sound:play()
+		elif #lines_to_remove > 0 && #lines_to_remove < 4 then 
+			@.camera:shake(15 * #lines_to_remove)
+			@.placing_sound:play()
+		elif #lines_to_remove == 4 then 
+			@.camera:shake(15 * #lines_to_remove)
+			@.placing_sound:play()
+		end
+	end
 
 	-- generate new current && next piece
 	if #@.current_blocs == 0 then
@@ -243,6 +269,8 @@ function Game_room:move_left()
 	end
 
 	@.top_left.x -= 1
+
+	@.move_sound:play()
 end
 
 function Game_room:move_right()
@@ -264,6 +292,7 @@ function Game_room:move_right()
 	end
 
 	@.top_left.x += 1
+	@.move_sound:play()
 end
 
 function Game_room:rotate_clockwise()
@@ -273,8 +302,9 @@ function Game_room:rotate_clockwise()
 	local blocs = (fn()
 		local t = {}
 		foreach(current_piece.width, fn(j) 
-			foreach(current_piece.height, fn(i) 
-				insert(t, @.grid:get(@.top_left.x + i -1, @.top_left.y + j -1))
+			foreach(current_piece.height, fn(i)
+				local bloc = @.grid:get(@.top_left.x + i -1, @.top_left.y + j -1)
+					insert(t, bloc || 0)
 			end)
 		end)
 		return t
@@ -305,6 +335,9 @@ function Game_room:rotate_clockwise()
 				insert(@.current_blocs, { x = @.top_left.x + i -1, y = @.top_left.y + j - 1, v = @.current_idx})
 			end
 		end)
+
+		@.rotate_sound:stop()
+		@.rotate_sound:play()
 	end
 
 	ifor @.current_blocs do @.grid:set(it.x, it.y, it.v) end
