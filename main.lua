@@ -43,7 +43,7 @@ function love.run()
 		game:add_room('menu', Menu_room())
 		game:add_room('game', Game_room())
 
-		game:change_room('game')
+		game:change_room('menu')
 	end
 
 	function love.update(dt)

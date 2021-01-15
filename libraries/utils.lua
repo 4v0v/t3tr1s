@@ -122,7 +122,7 @@ function print(t)
 	-- check if table has __tostring metamethod
 	if type(t) == 'table' then 
 		local meta = getmetatable(t)
-		if meta.__tostring then old_print(t) return end
+		if meta and meta.__tostring then old_print(t) return end
 	else 
 		old_print(t) return
 	end
@@ -149,7 +149,7 @@ function print(t)
 end
 
 function table.keys(t) 
-	local _keys = {} 
+	local _keys = {}
 	for k, _ in pairs(t) do _keys[#_keys + 1] = k end 
 	return _keys 
 end

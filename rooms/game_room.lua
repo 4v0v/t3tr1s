@@ -62,7 +62,9 @@ function Game_room:new()
 	}
 
 	@.camera:set_position(400, 300)
+end
 
+function Game_room:enter(dt)
 	@.next_idx = math.random(#@.pieces)
 	local piece = @.pieces[@.next_idx]:to_table()
 	ifor bloc in piece do 
@@ -78,7 +80,7 @@ function Game_room:update(dt)
 
 	if pressed('left')  || pressed('q') then @:move_left()  end
 	if pressed('right') || pressed('d') then @:move_right() end
-	if pressed('space')                 then @:rotate_clockwise() end
+	if pressed('up')    || pressed('z') then @:rotate_clockwise() end
 	if down('down')     || down('s')    then @:move_down()  end
 end
 
@@ -123,6 +125,8 @@ end
 
 function Game_room:move_down()
 	@.grid:fill(0)
+
+	print(@:count('Text'))
 
 	ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
 
@@ -205,7 +209,7 @@ function Game_room:move_down()
 			elif @.score >= 90                 then @.move_down_speed = .1 end
 
 			@.timer:remove('move_down')
-			@:every_immediate(@.move_down_speed, fn() @:move_down() end, _, 'move_down')
+			@:every(@.move_down_speed, fn() @:move_down() end, _, 'move_down')
 		end
 
 		@.current_blocs = {}

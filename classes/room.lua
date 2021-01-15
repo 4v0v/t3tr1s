@@ -5,7 +5,9 @@ function Room:new()
 	@.timer  = Timer()
 	@.camera = Camera()
 	@._queue = {}
-	@._ents  = { All = {} }
+	@._ents  = {}
+	@._ents_by_id   = {}
+	@._ents_by_type = {}
 end
 
 function Room:update(dt)
@@ -13,38 +15,40 @@ function Room:update(dt)
 	@.camera:update(dt)
 
 	-- update entitites
-	for @._ents['All'] do 
+	ifor @._ents do 
 		it:update(dt) 
 	end
+
 	-- delete dead entities
-	for @._ents['All'] do 
+	rfor @._ents do 
 		if it.dead then
-			@._ents['All'][it.id] = nil
-			for type in it.types do @._ents[type][it.id] = nil end
+			for type in it.types do @._ents_by_type[type][it.id] = nil end
+			@._ents_by_id[it.id] = nil
+			table.remove(@._ents, key)
 		end
 	end
+
 	-- push entities from queue
 	for queued_ent in @._queue do
 		ifor type in queued_ent.types do 
-			@._ents[type] = get(@, {'_ents', type}, {})
-			@._ents[type][queued_ent.id] = queued_ent
+			@._ents_by_type[type] = get(@, {'_ents_by_type', type}, {}) -- create type table if not already existing
+			@._ents_by_type[type][queued_ent.id] = queued_ent
 		end
-		@._ents['All'][queued_ent.id] = queued_ent
+		@._ents_by_id[queued_ent.id] = queued_ent
+		insert(@._ents, queued_ent)
 	end
 	@._queue = {}
 end
 
 function Room:draw()
-	local entities = {}
-	for @._ents['All'] do insert(entities, it) end
-	table.sort(entities, fn(a, b) if a.z == b.z then return a.id < b.id else return a.z < b.z end end)
+	table.sort(@._ents, fn(a, b) if a.z == b.z then return a.id < b.id else return a.z < b.z end end)
 
 	local _r, _g, _b, _a = lg.getColor()
 	@.camera:draw(function()
 		@:draw_inside_camera_bg()
 		lg.setColor(_r, _g, _b, _a)
 
-		for entities do 
+		for @._ents do 
 			if it.draw && !it.outside_camera then 
 				it:draw()
 				lg.setColor(_r, _g, _b, _a)
@@ -58,7 +62,7 @@ function Room:draw()
 	@:draw_outside_camera_bg()
 	lg.setColor(_r, _g, _b, _a)
 
-	for entities do 
+	for @._ents do 
 		if it.draw && it.outside_camera then
 			it:draw()
 			lg.setColor(_r, _g, _b, _a)
@@ -89,9 +93,16 @@ function Room:add(a, b, c)
 
 	entity.types = types  
 	entity.id    = id
-	entity.room  = @
-	@._queue[id] = entity
-	return entity 
+
+	-- TODO: what to do wehn already existing id ?
+	if @._ents_by_id[id] then
+		print('id already exist') 
+	else
+		entity.room  = @
+		@._queue[id] = entity
+	end 
+
+	return entity
 end
 
 function Room:kill(id) 
@@ -100,9 +111,13 @@ function Room:kill(id)
 end
 
 function Room:get(id) 
-	local entity = @._ents['All'][id]
-	if !entity or entity.dead then return nil end
+	local entity = @._ents_by_id[id]
+	if !entity or entity.dead then return false end
 	return entity
+end
+
+function Room:get_all()
+	return @._ents
 end
 
 function Room:get_by_type(...)
@@ -111,9 +126,9 @@ function Room:get_by_type(...)
 	local filtered = {} -- filter duplicate entities using id
 
 	for type in types do
-		if @._ents[type] then
-			for @._ents[type] do
-				if !it.dead then filtered[it.id] = ent end
+		if @._ents_by_type[type] then
+			for @._ents_by_type[type] do
+				if !it.dead then filtered[it.id] = it end
 			end
 		end
 	end
@@ -124,21 +139,7 @@ function Room:get_by_type(...)
 end
 
 function Room:count(...)
-	local entities = {}
-	local types    = {...}
-	local filtered = {} -- filter duplicate entities using id
-
-	for type in types do
-		if @._ents[type] then
-			for @._ents[type] do
-				if !it.dead then filtered[it.id] = ent end
-			end
-		end
-	end
-
-	for filtered do insert(entities, it) end
-
-	return #entities
+	return #@:get_by_type(...)
 end
 
 function Room:draw_inside_camera_bg()
