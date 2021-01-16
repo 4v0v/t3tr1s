@@ -45,11 +45,9 @@ function Grid:foreach(func)
 end
 
 function Grid:fill(value)
-  for i = 1, @.width do
-    for j = 1, @.height do
-      @:set(i, j, value)
-    end
-  end
+	ifor @.grid do
+		@.grid[key] = value
+	end
 end
 
 function Grid:to_table() 

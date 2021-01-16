@@ -25,6 +25,11 @@ function love.run()
 		lg.setLineStyle('rough')
 		lg.setBackgroundColor(.2, .2, .2, .2)
 		lk.setKeyRepeat(true)
+
+		la.setEffect('reverb_fx', {
+			type = 'reverb',
+			gain = .3,
+		})
 		
 		Class   = require('libraries/class')
 		Camera  = require('libraries/camera')
