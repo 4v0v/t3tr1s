@@ -79,7 +79,7 @@ function Entity:always(...)
 end
 
 function Entity:move_toward(target, speed, turn_speed)
-	local taret = Vec2(target)
+	local target     = Vec2(target)
 	local target_dir = (target - @.pos):normalized()
 	local dir_diff   = target_dir - @.dir
 	@.dir += (dir_diff * (turn_speed * dt))

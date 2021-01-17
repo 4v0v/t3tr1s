@@ -82,6 +82,7 @@ function Game_room:enter(dt)
 	@.is_holding      = false
 	@.can_hold        = true
 	@.score           = 0
+	@.grid:fill(0)
 
 	local score = @:get('score')
 	if score then score:set_text(@.score) end
@@ -277,7 +278,7 @@ function Game_room:move_down()
 			if it.v != 0 then
 				local dx, dy = it.x + 3, it.y
 				local g = @.grid:get(dx, dy)
-				if g != 0 then print('GAME OVER') game:change_room('menu') end --TODO make better game over
+				if g != 0 then game:change_room('over') end --TODO make better game over
 				insert(@.current_blocs, {x = dx, y = dy, v = @.next_idx}) 
 			end
 		end

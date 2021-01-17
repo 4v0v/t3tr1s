@@ -46,6 +46,7 @@ function love.run()
 
 		game = Game()
 		game:add_room('menu', Menu_room())
+		game:add_room('over', Game_over_room())
 		game:add_room('game', Game_room())
 
 		game:change_room('menu')
