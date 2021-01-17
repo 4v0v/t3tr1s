@@ -3,26 +3,12 @@ Game_room = Room:extend('Game_room')
 function Game_room:new()
 	Game_room.super.new(@)
 
-	@.score          = 0
-	@:add('score', Text(400, 500, @.score, {
+	@:add('score', Text(400, 500, '0', {
 		font           = lg.newFont('assets/fonts/fixedsystem.ttf', 32),
 		scale          = 3, 
 		centered       = true,
 	}))
-
 	@.grid            = Grid(10, 20)
-	@.current_idx     = 0
-	@.next_idx        = 0
-	@.hold_idx        = 0
-	@.next_blocs      = {}
-	@.hold_blocs      = {}
-	@.current_blocs   = {}
-	@.placed_blocs    = {}
-	@.top_left        = {x = 4, y = 1}
-	@.move_down_speed = 1
-	@.can_move_down   = true
-	@.is_holding      = false
-	@.can_hold        = true
 	@.move_sound      = la.newSource("assets/sounds/move.wav",   "static")
 	@.rotate_sound    = la.newSource("assets/sounds/rotate.wav", "static")
 	@.placing_sound   = la.newSource("assets/sounds/drop.wav",   "static")
@@ -65,12 +51,41 @@ function Game_room:new()
 		}),
 	}
 
-	@.placing_sound:setEffect('reverb_fx')
+	@.current_idx     = 0
+	@.next_idx        = 0
+	@.hold_idx        = 0
+	@.next_blocs      = {}
+	@.hold_blocs      = {}
+	@.current_blocs   = {}
+	@.placed_blocs    = {}
+	@.top_left        = {x = 4, y = 1}
+	@.move_down_speed = 1
+	@.can_move_down   = true
+	@.is_holding      = false
+	@.can_hold        = true
 
+	@.placing_sound:setEffect('reverb_fx')
 	@.camera:set_position(400, 300)
 end
 
 function Game_room:enter(dt)
+	@.current_idx     = 0
+	@.next_idx        = 0
+	@.hold_idx        = 0
+	@.next_blocs      = {}
+	@.hold_blocs      = {}
+	@.current_blocs   = {}
+	@.placed_blocs    = {}
+	@.top_left        = {x = 4, y = 1}
+	@.move_down_speed = 1
+	@.can_move_down   = true
+	@.is_holding      = false
+	@.can_hold        = true
+	@.score           = 0
+
+	local score = @:get('score')
+	if score then score:set_text(@.score) end
+
 	@.next_idx = math.random(#@.pieces)
 	local piece = @.pieces[@.next_idx]:to_table()
 	ifor bloc in piece do 
@@ -262,7 +277,7 @@ function Game_room:move_down()
 			if it.v != 0 then
 				local dx, dy = it.x + 3, it.y
 				local g = @.grid:get(dx, dy)
-				if g != 0 then print('GAME OVER') end --TODO make better game over
+				if g != 0 then print('GAME OVER') game:change_room('menu') end --TODO make better game over
 				insert(@.current_blocs, {x = dx, y = dy, v = @.next_idx}) 
 			end
 		end
@@ -394,7 +409,6 @@ function Game_room:hold()
 				insert(@.current_blocs, {x = it[1] + 3, y = it[2], v = @.current_idx})
 			end
 		end
-
 		
 		@.grid:fill(0)
 		ifor @.placed_blocs do @.grid:set(it.x, it.y, 8) end
